@@ -50,7 +50,7 @@ def scdf(array, compress=False, maxNpoints=1000):
     else: # If few points, just interpolate between all sample values
             y = np.arange(lena)+1
     x = x[y-1]
-    return interp1d(x, y/lena, kind="linear", bounds_error=False)
+    return interp1d(x, y/lena, kind="linear", bounds_error=False,fill_value=(0,1))
 
 class SE_distribution(stats.rv_continuous):
     """

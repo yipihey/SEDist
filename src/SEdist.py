@@ -1,4 +1,6 @@
 #SEdist.py
+__all__ = ["SE_distribution"]
+
 import numpy as np
 import scipy.stats as stats
 from scipy.interpolate import interp1d

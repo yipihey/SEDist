@@ -3,6 +3,7 @@ __all__ = ["SE_distribution"]
 
 import numpy as np
 import scipy.stats as stats
+from scipy.misc import derivative
 from scipy.interpolate import interp1d
 
 # extend some stats functionality
@@ -57,12 +58,13 @@ def scdf(array, compress=False, maxNpoints=1000):
 class SE_distribution(stats.rv_continuous):
     """
     Smooth empirical distributions.
-    The class gets initialized with an array of observations of a 1D random variable. 
-    It creates an interpolating function with a 1000 points spread logarithmically 
-    capturing the tails of the cdf, and then exposes all the usual routines of
-    scipy.stats.rv_continuous
-    compress: 
-    and adds a pcdf and a logpcdf for the peaked CDF and its log. 
+    The class gets initialized with an array of observations of a 1D random variable.\n 
+    It creates an interpolating function with a 1000 points spread logarithmically \n
+    capturing the tails of the cdf, and then exposes all the usual routines of\n
+    scipy.stats.rv_continuous and adds a pcdf and a logpcdf for the peaked CDF and its log. \n
+    compress: "linear": linear spacing in the random variable\n
+              "log": logarithmic spacing from start to mean and the end towards the mean\n
+    Ninterpolants: target number of interpolation points.
     """
     def __init__(self, inarray, *args, compress="", Ninterpolants=1000, **kwargs):
         self.compress = compress

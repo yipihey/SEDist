@@ -3,7 +3,6 @@ __all__ = ["SE_distribution"]
 
 import numpy as np
 import scipy.stats as stats
-from scipy.misc import derivative
 from scipy.interpolate import interp1d
 
 # extend some stats functionality

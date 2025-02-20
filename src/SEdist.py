@@ -58,7 +58,7 @@ class SE_distribution(stats.rv_continuous):
     """
     Smooth empirical distributions.
     The class gets initialized with an array of observations of a 1D random variable.\n 
-    It creates an interpolating function with a 1000 points spread logarithmically \n
+    It creates an interpolating function with a Ninterpolants points spread linearly/logarithmically \n
     capturing the tails of the cdf, and then exposes all the usual routines of\n
     scipy.stats.rv_continuous and adds a pcdf and a logpcdf for the peaked CDF and its log. \n
     compress: "linear": linear spacing in the random variable\n
@@ -98,3 +98,15 @@ class SE_distribution(stats.rv_continuous):
         return pcv
     def logpcdf(self, *args): # log of peaked cdf 
         return np.log(self.pcdf(*args))
+    def plotpcdf(self, *args, **kwargs): # plot peaked cdf
+        import matplotlib.pyplot as plt
+        return plt.plot(self.f.x,self.pcdf(self.f.x), *args, **kwargs) 
+    def plotlogpcdf(self, *args, **kwargs): # plot peaked cdf
+        import matplotlib.pyplot as plt
+        return plt.semilogy(self.f.x,self.pcdf(self.f.x), *args, **kwargs) 
+    def plotcdf(self, *args, **kwargs): # plot cdf
+        import matplotlib.pyplot as plt
+        return plt.plot(self.f.x, self.cdf(self.f.x), *args, **kwargs) 
+    def plotlogcdf(self, *args, **kwargs): # plot cdf
+        import matplotlib.pyplot as plt
+        return plt.semilogy(self.f.x, self.cdf(self.f.x), *args, **kwargs) 

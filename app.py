@@ -134,6 +134,11 @@ DARK = dict(
 )
 GRID = dict(gridcolor="#1e293b", zerolinecolor="#334155")
 
+# Log-scale y-axis bounds used on every peaked-CDF plot:
+#   lower = 1e-3  (0.1th percentile — one tenth of a percent in the tail)
+#   upper = just above 0.5 (the pCDF maximum, reached at the median)
+PCDF_LOG_RANGE = (-3, round(np.log10(0.5) + 0.1, 3))
+
 
 def base_layout(title, xlab, ylab, height=340, log_y=False):
     return dict(
@@ -326,7 +331,7 @@ with tab1:
             marker_color=C_HIST, opacity=0.85,
         ))
         if log_s4:
-            f4h.update_yaxes(range=[-4, 1])
+            f4h.update_yaxes(range=[-3, 1])
         f4h.update_layout(**base_layout("Histogram — 40 fixed bins", "x", "Density", log_y=log_s4))
         st.plotly_chart(f4h, use_container_width=True)
 
@@ -336,7 +341,7 @@ with tab1:
             mode="lines", line=dict(color=C_PCDF, width=2.5),
         ))
         if log_s4:
-            f4p.update_yaxes(range=[-6, np.log10(0.5) + 0.1])
+            f4p.update_yaxes(range=list(PCDF_LOG_RANGE))
         f4p.update_layout(**base_layout("Peaked CDF — no bins needed", "x", "pCDF(x)", log_y=log_s4))
         st.plotly_chart(f4p, use_container_width=True)
 
@@ -449,6 +454,8 @@ with tab1:
     ), row=1, col=3)
 
     fig_pg.update_yaxes(type="log" if log_pg else "linear")
+    if log_pg:
+        fig_pg.update_yaxes(range=list(PCDF_LOG_RANGE), row=1, col=3)
     fig_pg.update_layout(
         title=dict(text=f"{desc} — n={n_pg} samples", font_size=13),
         height=400, showlegend=show_fold,
@@ -624,7 +631,7 @@ with tab2:
         legend=dict(x=0.01, y=0.99, font_size=12, bgcolor="rgba(0,0,0,0)", font_color="#e2e8f0"),
     )
     if log_img:
-        fig_img.update_yaxes(range=[-5, np.log10(0.5) + 0.05])
+        fig_img.update_yaxes(range=list(PCDF_LOG_RANGE))
     st.plotly_chart(fig_img, use_container_width=True)
 
     st.markdown(
@@ -829,6 +836,8 @@ print(d_log.N,     d_log.Nfit)    # N,  ≤ 500
                 legend=dict(x=0.01, y=0.99, font_size=11,
                             bgcolor="rgba(0,0,0,0)", font_color="#e2e8f0"),
             )
+            if comp_log:
+                fig_comp.update_yaxes(range=list(PCDF_LOG_RANGE))
             st.plotly_chart(fig_comp, use_container_width=True)
 
         st.markdown(

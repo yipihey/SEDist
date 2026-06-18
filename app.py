@@ -142,7 +142,6 @@ def base_layout(title, xlab, ylab, height=340, log_y=False):
         yaxis_title = ylab,
         yaxis_type  = "log" if log_y else "linear",
         height      = height,
-        showlegend  = False,
         margin      = dict(t=50, b=40, l=60, r=20),
         xaxis       = GRID,
         yaxis       = GRID,

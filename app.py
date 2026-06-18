@@ -85,13 +85,16 @@ def base_layout(title, xlab, ylab, height=340, log_y=False):
 st.title("📊  Peaked CDFs: Visualize Data Without Losing Information")
 st.markdown(
     """
-Histograms are the go-to tool for exploring data distributions — but they carry
-a hidden cost: you must choose a bin width. Too few bins and peaks merge; too many
-and the signal drowns in noise. **Peaked CDFs** give you the same intuitive visual
-as a histogram — peaks where data concentrates, valleys in sparse regions —
-while preserving every single data point.
+Histograms require choosing a bin width — a free parameter that affects the visual
+representation without changing the underlying data.  Choose too few bins and distinct
+features merge; choose too many and statistical noise dominates.
 
-Work through the sections below to see why.
+The **peaked CDF** is a binning-free alternative.  It is derived directly from the
+empirical CDF, so it uses every data point exactly once, and its y-axis carries a
+direct probability interpretation: pCDF(*x*) is the fraction of the data that lies
+on the minority side of *x*.
+
+The sections below build up the concept step by step.
 """
 )
 
@@ -101,11 +104,11 @@ st.divider()
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 1 – The Binning Problem
 # ══════════════════════════════════════════════════════════════════════════════
-st.header("① The Binning Problem")
+st.header("① Effect of Bin Width")
 st.markdown(
     """
-Below is the **same dataset** — 600 samples from a bimodal distribution — displayed
-as a histogram.  Drag the slider to change the number of bins.
+The dataset below is fixed: 600 samples from a bimodal distribution.
+Only the histogram bin count changes.
 """
 )
 
@@ -131,9 +134,9 @@ fig_s1.update_layout(**base_layout(
 st.plotly_chart(fig_s1, use_container_width=True)
 
 st.info(
-    "**Try this:** Set bins to 6 — the two peaks vanish into one.  "
-    "Set to 180 — the peaks fragment into noisy spikes.  "
-    "The \"right\" bin count is subjective and changes the story you tell."
+    "At 6 bins the two modes merge into one broad hump.  "
+    "At 180 bins the signal is buried in sampling noise.  "
+    "The data have not changed; only the bin width has."
 )
 
 st.divider()
@@ -142,14 +145,13 @@ st.divider()
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 2 – The CDF Never Changes
 # ══════════════════════════════════════════════════════════════════════════════
-st.header("② The CDF Never Changes")
+st.header("② The CDF Requires No Bin Width")
 st.markdown(
     """
-A **Cumulative Distribution Function** (CDF) at point *x* answers:
-*"What fraction of my data is ≤ x?"*
+The **Cumulative Distribution Function** F(*x*) is the fraction of data points
+with values ≤ *x*.  It is determined entirely by the data; bin width does not enter.
 
-It requires **no bin width** — it uses every data point exactly once.
-Keep moving the slider and watch what doesn't change.
+Move the slider and observe that the CDF on the right does not change.
 """
 )
 
@@ -182,10 +184,10 @@ with col2b:
     st.plotly_chart(fig_cdf2, use_container_width=True)
 
 st.warning(
-    "**The catch:** the CDF is completely stable, but its S-shape is hard to read. "
-    "Where are the peaks?  You can see the CDF rises faster between –3 and –1, "
-    "and again between 1 and 3, but you have to work for it.  "
-    "Histograms were invented because humans find peaked shapes much easier to parse."
+    "The CDF is stable and unambiguous, but its monotone S-shape makes it hard to "
+    "identify structure visually.  The two modes of this dataset appear as regions "
+    "where the slope is steeper, but that is not immediately obvious from inspection.  "
+    "Histograms became the standard tool partly because peaked shapes are easier to parse."
 )
 
 st.divider()
@@ -194,19 +196,28 @@ st.divider()
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 3 – From CDF to Peaked CDF
 # ══════════════════════════════════════════════════════════════════════════════
-st.header("③ The Peaked CDF — Fold the CDF in Half")
+st.header("③ From CDF to Peaked CDF")
 st.markdown(
     r"""
-The trick is one line of math:
+Define the peaked CDF by folding $F$ around $y = 0.5$:
 
 $$\text{pCDF}(x) \;=\; \min\!\bigl(\,F(x),\; 1 - F(x)\,\bigr)$$
 
-We take the CDF $F(x)$ and its mirror $1-F(x)$, then keep whichever is smaller
-at each point.  This **folds** the CDF around $y = 0.5$:
+**Reading the y-axis directly:**
+- pCDF(*x*) is the fraction of data on the *minority* side of *x*
+- To the left of the median, pCDF(*x*) = F(*x*) = fraction of data below *x*
+- To the right of the median, pCDF(*x*) = 1−F(*x*) = fraction of data above *x*
+- The maximum value is always 0.5, reached at the median
 
-- Where $F$ rises **steeply** (many data points nearby) → both $F$ and $1-F$
-  approach 0.5 together → the minimum stays **high** → a **peak**.
-- In **sparse tails** → $F$ barely moves → the minimum is **low** → a **valley**.
+**Shape and density:**
+Where F rises steeply — i.e., where data is densely concentrated — pCDF also
+changes rapidly (steep slope upward on the left of the median, steep slope
+downward on the right).  In sparse regions F is nearly flat, so pCDF is also flat.
+
+For a unimodal distribution this produces a single peak at the median.
+For a bimodal distribution with roughly equal weight in each mode, the two dense
+regions produce steep sides, with a **plateau near 0.5** between them where
+data is sparse.  The plateau is *not* two peaks — it reflects the gap between modes.
 
 The three panels below show the transformation step by step.
 """
@@ -263,9 +274,11 @@ with col3c:
     fig3c.update_layout(**base_layout("③ Result: the Peaked CDF", "x", "pCDF(x)"))
     st.plotly_chart(fig3c, use_container_width=True)
 
-st.success(
-    "The two peaks in the peaked CDF correspond exactly to the two modes of the "
-    "bimodal distribution — same information as the histogram, zero arbitrary choices."
+st.info(
+    "For this symmetric bimodal distribution the peaked CDF shows a broad plateau "
+    "near 0.5 — the sparse gap between the two modes — flanked by steep slopes where "
+    "each mode concentrates the data.  Compare with the histogram: the steep slopes in "
+    "the peaked CDF correspond to the tall bars in the histogram, with no bin width choice required."
 )
 
 st.divider()
@@ -274,12 +287,11 @@ st.divider()
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 4 – Log Scale Reveals the Tails
 # ══════════════════════════════════════════════════════════════════════════════
-st.header("④ Log Scale: Inspect the Tails")
+st.header("④ Log Scale and the Probability Interpretation")
 st.markdown(
     """
-Log-scale histograms are a common trick for seeing rare events.
-The peaked CDF does the same on log scale — but **without the empty bins**
-that appear when tail counts are too low.  Toggle the log scale and compare.
+A log-scale y-axis is standard practice when inspecting distribution tails.
+Toggle it on and compare the two representations.
 """
 )
 
@@ -315,13 +327,22 @@ with col4b:
     st.plotly_chart(fig4b, use_container_width=True)
 
 st.markdown(
-    """
-On log scale the histogram develops **gaps and spikes** in the tails —
-an artifact of sparse bins.  The peaked CDF remains **smooth all the way to
-the edge of your data**.
+    r"""
+On log scale the histogram shows gaps and large statistical fluctuations in the tails
+where bins contain few counts.  The peaked CDF is smooth down to the outermost data
+point because it places one step per observation rather than aggregating into bins.
 
-The y-axis of the peaked CDF has a direct statistical meaning:
-a value of 0.1 means 10% of the data lies below (or above) that x value.
+**Reading probabilities directly off the peaked CDF:**
+
+| pCDF value | Meaning |
+|---|---|
+| 0.5 | This is the median; half the data lie on each side |
+| 0.1 | 10% of the data lie below this *x* (left of median) or above it (right of median) |
+| 0.01 | 1% of the data are more extreme than this *x* on the minority side |
+
+Because pCDF(*x*) = min(F(*x*), 1−F(*x*)), it is always the fraction of data on
+the *smaller* side of *x*.  On a log scale, reading a tail probability at any *x*
+is a direct read from the y-axis — no integration or table lookup needed.
 """
 )
 
@@ -331,11 +352,11 @@ st.divider()
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 5 – Interactive Playground
 # ══════════════════════════════════════════════════════════════════════════════
-st.header("⑤ Interactive Playground")
+st.header("⑤ Interactive Comparison")
 st.markdown(
-    "Choose a distribution, adjust its parameters, and watch all three views update "
-    "simultaneously.  Try very small sample sizes to see how the peaked CDF stays "
-    "informative where the histogram gives up."
+    "Select a distribution and adjust parameters.  All three representations update "
+    "from the same random sample.  Small sample sizes (n ≲ 50) are informative: "
+    "compare how the peaked CDF and histogram each represent the same sparse data."
 )
 
 # ── Controls ──────────────────────────────────────────────────────────────────
@@ -479,9 +500,12 @@ st.plotly_chart(fig_pg, use_container_width=True)
 
 st.markdown(
     "**Suggested experiments:**\n"
-    "- Set n=20 — histogram is barely informative; peaked CDF still shows shape\n"
-    "- Try Student-t with ν=2 — log-scale peaked CDF shows the heavy power-law tails\n"
-    "- Bimodal with closely spaced peaks — see how many bins you need vs pCDF"
+    "- n = 20: with few data points the histogram is strongly bin-width dependent; "
+    "the peaked CDF places one step per observation\n"
+    "- Student-t, ν = 2, log scale: the power-law tail is visible as a straight line "
+    "in the peaked CDF; empty histogram bins appear at the same location\n"
+    "- Bimodal, adjust peak separation: narrow the gap and note when the histogram "
+    "requires many bins to resolve both modes vs. what the peaked CDF shows"
 )
 
 st.divider()
@@ -497,42 +521,42 @@ col6a, col6b, col6c = st.columns(3, gap="medium")
 with col6a:
     st.markdown(
         """
-### 📊  Histogram
+### Histogram
 | | |
 |---|---|
-| ✅ | Intuitive peaks |
-| ❌ | Arbitrary bin width |
-| ❌ | Loses data-point positions |
-| ❌ | Empty bins in tails |
-| ❌ | Misleading for small n |
+| ✅ | Peaked shape is easy to read |
+| ❌ | Requires a bin width choice |
+| ❌ | Aggregates data into bins |
+| ❌ | Empty bins in sparse tails |
+| ❌ | Sensitive to n in each bin |
 """
     )
 
 with col6b:
     st.markdown(
         """
-### 📈  CDF
+### CDF
 | | |
 |---|---|
 | ✅ | Uses all data exactly |
 | ✅ | No bin width needed |
-| ✅ | Stable and unambiguous |
-| ❌ | Monotone S-shape is hard to read |
-| ❌ | Peaks and modes not obvious |
+| ✅ | y-axis is cumulative fraction |
+| ❌ | Monotone — structure not obvious |
+| ❌ | Modes appear only as slope changes |
 """
     )
 
 with col6c:
     st.markdown(
         """
-### ✨  Peaked CDF
+### Peaked CDF
 | | |
 |---|---|
 | ✅ | Uses all data exactly |
 | ✅ | No bin width needed |
-| ✅ | Peaks = data concentration |
-| ✅ | Log scale reveals tails smoothly |
-| ✅ | Works well even for small n |
+| ✅ | Steep slopes = data concentration |
+| ✅ | y-axis is a direct probability |
+| ✅ | Log scale gives smooth tails |
 """
     )
 
